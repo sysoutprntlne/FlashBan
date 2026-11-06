@@ -1,0 +1,16 @@
+{
+  "name": "flashban-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.mjs ../demo/test/*.mjs",
+    "test:browser": "node test/browser.mjs",
+    "video": "node tools/record.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0",
+    "@axe-core/playwright": "4.14.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-11-06T19:55:44.286Z",
+  "checks": [
+    "clean source is allowed after real samples",
+    "rapid source is detected and never uncovered during warm-up",
+    "standard requires more than three completed general flashes",
+    "actual cross-origin pixel access fails closed",
+    "origin-clean state resets between scenarios",
+    "reduced motion offers a covered measurements-only replay",
+    "Escape cancels a run",
+    "automated WCAG A/AA checks: no violations",
+    "390px mobile viewport has no horizontal overflow"
+  ],
+  "pageErrors": []
+}

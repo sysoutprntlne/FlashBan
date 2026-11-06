@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FlashBan — A calmer web</title>
+    <link rel="stylesheet" href="/studio/style.css" />
+    <script type="module" src="/studio/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to demo</a>
+    <aside class="rail" aria-label="Brand">
+      <a href="/" class="logo" aria-label="FlashBan home">f<span>•</span></a
+      ><span class="rail-label">A CALMER WEB</span
+      ><span class="rail-bottom" aria-hidden="true">✳</span>
+    </aside>
+    <div class="shell">
+      <header>
+        <a class="wordmark" href="/"
+          >FlashBan<span class="version">LAB / 01</span></a
+        >
+        <nav aria-label="Main">
+          <a href="#how">How it works</a><a href="#limits">Known limits</a
+          ><a class="install-link" href="/studio/install.html"
+            >Get the extension <span aria-hidden="true">↗</span></a
+          >
+        </nav>
+      </header>
+      <main id="main">
+        <section class="hero">
+          <div>
+            <div class="eyebrow">
+              <span class="dot"></span> LOCAL-FIRST BROWSER PROTECTION
+            </div>
+            <h1>Less flash.<br />More <em>peace of mind.</em></h1>
+            <p class="intro">
+              A quieter layer between you and flashing content.<br />See how
+              FlashBan measures, shields, and gives you control.
+            </p>
+          </div>
+          <div class="hero-note">
+            <span class="note-icon" aria-hidden="true">◈</span
+            ><strong>Your browser. Your boundaries.</strong>
+            <p>No uploads. No accounts.<br />Everything runs on your device.</p>
+            <span class="small-pill">EXPERIMENTAL PROTOTYPE</span>
+          </div>
+        </section>
+        <section class="workspace" aria-labelledby="demo-title">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">THE INTERACTIVE LAB</span>
+              <h2 id="demo-title">Meet your shield.</h2>
+            </div>
+            <div class="local-badge">
+              <span class="dot"></span> On-device analysis
+            </div>
+          </div>
+          <div class="demo-grid">
+            <div class="preview-card">
+              <div class="preview-bar">
+                <span class="traffic" aria-hidden="true">● ● ●</span
+                ><span id="source-label">local.demo / calm motion</span
+                ><span class="preview-private">PRIVATE</span>
+              </div>
+              <div class="stage" id="stage">
+                <canvas
+                  id="source"
+                  width="640"
+                  height="360"
+                  aria-label="Synthetic source monitored by the detector"
+                ></canvas>
+                <div id="shield" class="shield">
+                  <div class="shield-icon" aria-hidden="true">◇</div>
+                  <span class="shield-kicker" id="shield-kicker"
+                    >READY WHEN YOU ARE</span
+                  >
+                  <h3 id="shield-title">A little space to breathe.</h3>
+                  <p id="shield-detail">
+                    Choose a scene, then run the shield.<br />Test content stays
+                    covered while it’s checked.
+                  </p>
+                  <button id="reveal" class="reveal" hidden>
+                    Show paused source
+                  </button>
+                </div>
+                <div id="calm-caption" class="calm-caption" hidden>
+                  <span>EXHALE. YOU’RE IN CONTROL.</span
+                  ><strong>A moment of calm.</strong>
+                </div>
+              </div>
+              <div class="preview-footer">
+                <span id="state-dot" class="dot"></span
+                ><span id="run-status" role="status" aria-live="polite"
+                  >Ready · nothing is running</span
+                ><button id="stop" disabled>Stop <kbd>esc</kbd></button>
+              </div>
+            </div>
+            <div class="controls-card">
+              <span class="eyebrow">01 / CHOOSE A SCENE</span>
+              <fieldset>
+                <legend class="sr-only">Demo source</legend>
+                <label class="scene"
+                  ><input type="radio" name="scene" value="calm" checked /><span
+                    class="scene-icon"
+                    aria-hidden="true"
+                    >≈</span
+                  ><span
+                    ><strong>Calm motion</strong
+                    ><small>A steady, readable source</small></span
+                  ><span class="verdict">ALLOW</span></label
+                ><label class="scene"
+                  ><input type="radio" name="scene" value="flash" /><span
+                    class="scene-icon"
+                    aria-hidden="true"
+                    >ϟ</span
+                  ><span
+                    ><strong>Rapid changes</strong
+                    ><small>4 cycles per second · synthetic</small></span
+                  ><span class="verdict">SHIELD</span></label
+                ><label class="scene"
+                  ><input type="radio" name="scene" value="unreadable" /><span
+                    class="scene-icon"
+                    aria-hidden="true"
+                    >⊘</span
+                  ><span
+                    ><strong>Unreadable media</strong
+                    ><small>A real cross-origin pixel restriction</small></span
+                  ><span class="verdict">GUARD</span></label
+                >
+              </fieldset>
+              <div class="sensitivity">
+                <label for="preset">Sensitivity</label
+                ><select id="preset">
+                  <option value="strict">Strict · earlier intervention</option>
+                  <option value="standard">
+                    Standard · general-flash threshold
+                  </option>
+                </select>
+              </div>
+              <p class="motion-note" id="motion-note" hidden>
+                Reduced motion is on. Visual tests stay disabled; the
+                measurements-only replay below is available.
+              </p>
+              <button class="primary" id="run">
+                Run the shield <span aria-hidden="true">↗</span></button
+              ><button class="text-button" id="replay">
+                Run a measurements-only replay
+              </button>
+              <p class="control-note">
+                Rapid test content remains covered unless you explicitly reveal
+                it. Not a medical device or a guarantee of protection.
+              </p>
+            </div>
+          </div>
+          <div class="metrics" aria-label="Live measurements">
+            <div>
+              <span>GENERAL FLASHES / 1 SEC</span><strong id="flashes">—</strong
+              ><small id="flash-caption">Waiting for samples</small>
+            </div>
+            <div>
+              <span>AFFECTED SOURCE AREA</span><strong id="area">—</strong
+              ><small>CSS pixel estimate · not visual-field calibration</small>
+            </div>
+            <div>
+              <span>PIXEL SAMPLES</span><strong id="samples">0</strong
+              ><small id="sample-mode">Real source pixels, on-device</small>
+            </div>
+            <div class="decision">
+              <span>SHIELD DECISION</span><strong id="decision">Ready</strong
+              ><small id="decision-detail">You choose when to begin</small>
+            </div>
+          </div>
+        </section>
+        <section class="lower-grid">
+          <div class="activity">
+            <div class="mini-heading">
+              <h2>Session activity <span id="event-count">0</span></h2>
+              <button id="clear" class="text-button">Clear</button>
+            </div>
+            <ol id="events">
+              <li class="empty">
+                A clean slate. Your session events will appear here.
+              </li>
+            </ol>
+            <p class="privacy-note">
+              Session history stays in this tab. Nothing is sent to a server.
+            </p>
+          </div>
+          <div class="how" id="how">
+            <span class="eyebrow">DESIGNED TO BE UNDERSTOOD</span>
+            <h2>Measure. Decide. Shield.</h2>
+            <div class="step">
+              <b>01</b>
+              <p>
+                <strong>Read the real signal</strong
+                ><span
+                  >Sample luminance from source pixels using elapsed time.</span
+                >
+              </p>
+            </div>
+            <div class="step">
+              <b>02</b>
+              <p>
+                <strong>Keep a protective head start</strong
+                ><span
+                  >Cover new media while the first sample window fills.</span
+                >
+              </p>
+            </div>
+            <div class="step">
+              <b>03</b>
+              <p>
+                <strong>Put the decision in your hands</strong
+                ><span
+                  >Keep flagged or unreadable content behind a static
+                  shield.</span
+                >
+              </p>
+            </div>
+          </div>
+        </section>
+        <section class="limits" id="limits">
+          <span class="eyebrow">AN HONEST STARTING POINT</span>
+          <h2>A prototype, with clear boundaries.</h2>
+          <p>
+            This build detects general luminance flashes. It does not certify
+            WCAG compliance, analyze saturated-red flashes, decode animated
+            images, or guarantee pre-render blocking. Browser sampling can miss
+            changes. The area estimate is an engineering heuristic. Cross-origin
+            or unreadable pixels stay guarded.
+          </p>
+          <a href="/studio/install.html"
+            >Installation, research & testing notes
+            <span aria-hidden="true">↗</span></a
+          >
+        </section>
+        <footer>
+          <span class="wordmark"
+            >FlashBan<span class="version">BUILT FOR A CALMER WEB</span></span
+          ><span>Local by design. Human by default.</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

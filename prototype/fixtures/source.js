@@ -1,0 +1,35 @@
+const canvas = document.querySelector("canvas"),
+  ctx = canvas.getContext("2d");
+let frame = null,
+  start = 0;
+function stop() {
+  if (frame !== null) cancelAnimationFrame(frame);
+  frame = null;
+  ctx.fillStyle = "#163f40";
+  ctx.fillRect(0, 0, 640, 360);
+  document.querySelector("#status").textContent = "Stopped.";
+}
+function tick(t) {
+  if (t - start >= 4000) {
+    stop();
+    return;
+  }
+  ctx.fillStyle = Math.floor((t - start) / 125) % 2 ? "#171717" : "#a2a2a2";
+  ctx.fillRect(0, 0, 640, 360);
+  frame = requestAnimationFrame(tick);
+}
+document.querySelector("#start").onclick = () => {
+  stop();
+  start = performance.now();
+  document.querySelector("#status").textContent = "Running controlled source.";
+  frame = requestAnimationFrame(tick);
+};
+document.querySelector("#stop").onclick = stop;
+addEventListener("blur", stop);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stop();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") stop();
+});
+stop();

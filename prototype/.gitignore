@@ -1,0 +1,5 @@
+node_modules/
+.playwright-profile/
+artifacts/raw/
+artifacts/*.aiff
+artifacts/*.wav
