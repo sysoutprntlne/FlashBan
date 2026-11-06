@@ -1,1 +1,132 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FlashBan · Install & research</title><link rel="stylesheet" href="/studio/style.css"></head><body><main class="install-page"><a href="/">← Back to the lab</a><h1>Your shield.<br><em>Your browser.</em></h1><p>This fork-only prototype includes a local demo studio and an unpacked Chrome extension. They share the same general-flash detector.</p><section><h2>Install the extension</h2><ol><li>Download the <a href="/artifacts/flashban-prototype.zip">prototype ZIP</a> and extract it, or use the <code>prototype/extension</code> directory in the fork.</li><li>Open <code>chrome://extensions</code> in Chrome or Chromium.</li><li>Enable Developer mode, choose <strong>Load unpacked</strong>, then select the extension folder.</li><li>Open a source fixture and choose Start. Keep the initial guard enabled. The extension popup shows local events.</li></ol><p>The extension needs access to HTTP/HTTPS page content to inspect it. Events store hostnames only, locally, with a bounded log. There is no reporting server.</p><p><a href="/fixtures/source.html">Open the extension test page ↗</a></p></section><section id="extension-evidence"><h2>The installed shield, in Chromium</h2><p>Captured from the actual unpacked extension on the standalone canvas fixture during the automated browser test. This is extension output, not the studio overlay.</p><img src="/artifacts/extension-shield.png" alt="The installed extension covers the synthetic canvas and reports rapid flashing" style="width:100%;border:1px solid #bdcfc0;border-radius:10px"><p><a href="/artifacts/extension-results.json">Read the extension test results</a></p></section><section><h2>Research that informed the build</h2><p><a href="https://www.w3.org/TR/WCAG22/#dfn-general-flash-and-red-flash-thresholds">W3C general-flash definition</a> informed luminance and opposing-transition counting. The area calculation here is a prototype heuristic, not a visual-field calibration. Red-flash analysis is not implemented.</p><p><a href="https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts">Chrome content scripts</a> informed the isolated-world extension design. No remote scripts, page-message bridge, accounts, or analytics are used.</p><p><a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback">MDN video frame callbacks</a> informed per-frame video sampling. <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/CORS_enabled_image">Canvas origin restrictions</a> informed fail-closed handling. The studio demonstrates a real cross-origin pixel-read failure.</p></section><section><h2>Known boundaries</h2><p>This is not a medical device or guaranteed protection. Initial page rendering, browser scheduling, source size, overlays, and unsupported media can affect outcomes. No DRM or animated image decoding, red-flash detection, viewport area aggregation, adversarial-page hardening, Firefox/Safari extension support, or formal WCAG certification is claimed.</p><p>The studio’s covered test source is deliberately controlled. A passing fixture does not establish safety on arbitrary websites.</p></section><section><h2>Run and test locally</h2><p><code>node prototype/server.mjs</code> starts the studio at <code>http://127.0.0.1:8787</code>. The adjacent local port serves the cross-origin fixture.</p><p><code>node --test prototype/test/*.test.mjs demo/test/*.mjs</code> runs unit tests. Browser checks and video production instructions are in the prototype README.</p><p><a href="/artifacts/flashban-walkthrough.mp4">Watch the walkthrough ↗</a> · <a href="/artifacts/flashban-walkthrough.vtt">Captions ↗</a></p></section></main></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FlashBan · Install & research</title>
+    <link rel="stylesheet" href="/studio/style.css" />
+  </head>
+  <body>
+    <main class="install-page">
+      <a href="/">← Back to the lab</a>
+      <h1>Your shield.<br /><em>Your browser.</em></h1>
+      <p>
+        This fork-only prototype includes a local demo studio and an unpacked
+        Chrome extension. They share the same general-flash detector.
+      </p>
+      <section>
+        <h2>Install the extension</h2>
+        <ol>
+          <li>
+            Download the
+            <a href="/artifacts/flashban-prototype.zip">prototype ZIP</a> and
+            extract it, or use the <code>prototype/extension</code> directory in
+            the fork.
+          </li>
+          <li>Open <code>chrome://extensions</code> in Chrome or Chromium.</li>
+          <li>
+            Enable Developer mode, choose <strong>Load unpacked</strong>, then
+            select the extension folder.
+          </li>
+          <li>
+            Open a source fixture and choose Start. Keep the initial guard
+            enabled. The extension popup shows local events.
+          </li>
+        </ol>
+        <p>
+          The extension needs access to HTTP/HTTPS page content to inspect it.
+          Events store hostnames only, locally, with a bounded log. There is no
+          reporting server.
+        </p>
+        <p>
+          <a href="/fixtures/source.html">Open the extension test page ↗</a>
+        </p>
+      </section>
+      <section id="extension-evidence">
+        <h2>The installed shield, in Chromium</h2>
+        <p>
+          Captured from the actual unpacked extension on the standalone canvas
+          fixture during the automated browser test. This is extension output,
+          not the studio overlay.
+        </p>
+        <img
+          src="/artifacts/extension-shield.png"
+          alt="The installed extension covers the synthetic canvas and reports rapid flashing"
+          style="width: 100%; border: 1px solid #bdcfc0; border-radius: 10px"
+        />
+        <p>
+          <a href="/artifacts/extension-results.json"
+            >Read the extension test results</a
+          >
+        </p>
+      </section>
+      <section>
+        <h2>Research that informed the build</h2>
+        <p>
+          <a
+            href="https://www.w3.org/TR/WCAG22/#dfn-general-flash-and-red-flash-thresholds"
+            >W3C general-flash definition</a
+          >
+          informed luminance and opposing-transition counting. The area
+          calculation here is a prototype heuristic, not a visual-field
+          calibration. Red-flash analysis is not implemented.
+        </p>
+        <p>
+          <a
+            href="https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts"
+            >Chrome content scripts</a
+          >
+          informed the isolated-world extension design. No remote scripts,
+          page-message bridge, accounts, or analytics are used.
+        </p>
+        <p>
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback"
+            >MDN video frame callbacks</a
+          >
+          informed per-frame video sampling.
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/CORS_enabled_image"
+            >Canvas origin restrictions</a
+          >
+          informed fail-closed handling. The studio demonstrates a real
+          cross-origin pixel-read failure.
+        </p>
+      </section>
+      <section>
+        <h2>Known boundaries</h2>
+        <p>
+          This is not a medical device or guaranteed protection. Initial page
+          rendering, browser scheduling, source size, overlays, and unsupported
+          media can affect outcomes. No DRM or animated image decoding,
+          red-flash detection, viewport area aggregation, adversarial-page
+          hardening, Firefox/Safari extension support, or formal WCAG
+          certification is claimed.
+        </p>
+        <p>
+          The studio’s covered test source is deliberately controlled. A passing
+          fixture does not establish safety on arbitrary websites.
+        </p>
+      </section>
+      <section>
+        <h2>Run and test locally</h2>
+        <p>
+          <code>node prototype/server.mjs</code> starts the studio at
+          <code>http://127.0.0.1:8787</code>. The adjacent local port serves the
+          cross-origin fixture.
+        </p>
+        <p>
+          <code>node --test prototype/test/*.test.mjs demo/test/*.mjs</code>
+          runs unit tests. Browser checks and video production instructions are
+          in the prototype README.
+        </p>
+        <p>
+          <a href="/artifacts/flashban-walkthrough.mp4"
+            >Watch the walkthrough ↗</a
+          >
+          · <a href="/artifacts/flashban-walkthrough.vtt">Captions ↗</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

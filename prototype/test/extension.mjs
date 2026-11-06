@@ -1,25 +1,179 @@
-import {chromium} from 'playwright';
-import assert from 'node:assert/strict';
-import {mkdtemp,rm,writeFile} from 'node:fs/promises';
-import os from 'node:os';import path from 'node:path';import {fileURLToPath} from 'node:url';
-const ext=fileURLToPath(new URL('../extension/',import.meta.url)),profile=await mkdtemp(path.join(os.tmpdir(),'flashban-test-'));
-const base=process.env.BASE_URL||'http://127.0.0.1:8787';const checks=[];const add=checks.push.bind(checks);checks.push=(x)=>{console.log('PASS '+x);return add(x)};
-const context=await chromium.launchPersistentContext(profile,{headless:true,channel:'chromium',viewport:{width:1440,height:1080},args:[`--disable-extensions-except=${ext}`,`--load-extension=${ext}`]});
-try{
- let worker=context.serviceWorkers()[0]||await context.waitForEvent('serviceworker');const id=new URL(worker.url()).host;
- await worker.evaluate(()=>chrome.storage.local.set({events:[]}));
- const page=await context.newPage();await page.goto(base+'/fixtures/source.html');
- await page.waitForSelector('[data-flashban-overlay][data-state="guard"]');checks.push('installed extension creates an opaque source guard');
- await page.locator('#start').click();await page.waitForSelector('[data-flashban-overlay][data-state="blocked"]',{timeout:7000});checks.push('real canvas samples trigger a blocked overlay');
- await page.screenshot({path:new URL('../artifacts/extension-shield.png',import.meta.url).pathname});
- await page.waitForTimeout(300);let events=await worker.evaluate(async()=> (await chrome.storage.local.get('events')).events||[]);
- assert.ok(events.some(e=>e.kind==='blocked'&&e.source==='canvas'&&e.host==='127.0.0.1'&&e.fps>=3));assert.ok(events.every(e=>!Object.hasOwn(e,'url')&&!Object.hasOwn(e,'path')));checks.push('background stores actual host-only measurements');
- await page.evaluate(async base=>{const image=new Image();image.src=base.replace(':8787',':8788')+'/tainted.svg';await image.decode();for(const name of ['tainted','healthy']){const c=document.createElement('canvas');c.width=400;c.height=200;c.id=name;c.style.cssText=`position:fixed;left:${name==='tainted'?0:500}px;top:600px;width:400px;height:200px`;document.body.append(c);const x=c.getContext('2d');x.fillStyle='#234f55';x.fillRect(0,0,400,200);if(name==='tainted')x.drawImage(image,0,0,400,200)}},base);
- await page.waitForSelector('[data-flashban-overlay][data-state="unreadable"]');await page.waitForTimeout(1700);assert.equal(await page.locator('[data-flashban-overlay][data-state="unreadable"]').count(),1);assert.equal(await page.locator('[data-flashban-overlay][data-state="guard"]').count(),0);checks.push('tainted canvas is guarded without poisoning a healthy sibling');
- await page.evaluate(()=>{const style=document.createElement('style');style.textContent='@keyframes sourceFlash{0%,100%{background:#171717}50%{background:#a2a2a2}}#css-source{position:fixed;left:500px;top:100px;width:400px;height:200px;animation:sourceFlash 250ms step-end infinite}';document.head.append(style);const el=document.createElement('div');el.id='css-source';document.body.append(el)});
- await page.waitForFunction(()=>document.querySelector('#css-source').getAnimations().some(a=>a.playState==='paused'),null,{timeout:7000});checks.push('CSS background sampling detects and pauses rapid animation');
- await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=400;c.height=200;const x=c.getContext('2d');x.fillStyle='#171717';x.fillRect(0,0,400,200);const stream=c.captureStream(30),rec=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8'}),chunks=[];rec.ondataavailable=e=>chunks.push(e.data);const done=new Promise(resolve=>rec.onstop=resolve);let high=false;rec.start();const timer=setInterval(()=>{high=!high;x.fillStyle=high?'#a2a2a2':'#171717';x.fillRect(0,0,400,200)},125);await new Promise(r=>setTimeout(r,2000));clearInterval(timer);rec.stop();await done;stream.getTracks().forEach(t=>t.stop());const v=document.createElement('video');v.id='video-source';v.muted=true;v.loop=true;v.style.cssText='position:fixed;left:0;top:100px;width:400px;height:200px';v.src=URL.createObjectURL(new Blob(chunks,{type:'video/webm'}));document.body.append(v);await v.play()});
- await page.waitForFunction(()=>document.querySelector('#video-source').paused,null,{timeout:7000});await page.waitForTimeout(300);events=await worker.evaluate(async()=> (await chrome.storage.local.get('events')).events||[]);assert.ok(events.some(e=>e.kind==='blocked'&&e.source==='video'));checks.push('actual video frame sampling detects and pauses generated media');
- const popup=await context.newPage();await popup.goto(`chrome-extension://${id}/popup/popup.html`);await popup.waitForSelector('#events li');await popup.screenshot({path:new URL('../artifacts/extension-popup.png',import.meta.url).pathname});await popup.locator('#clear').click();await popup.waitForFunction(()=>document.querySelector('#status').textContent==='Events cleared.');assert.deepEqual(await worker.evaluate(async()=> (await chrome.storage.local.get('events')).events),[]);checks.push('popup renders and clears the local log');
- await writeFile(new URL('../artifacts/extension-results.json',import.meta.url),JSON.stringify({checkedAt:new Date().toISOString(),checks},null,2));console.log('Extension checks passed.');
-}finally{await context.close();await rm(profile,{recursive:true,force:true})}
+import { chromium } from "playwright";
+import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const ext = fileURLToPath(new URL("../extension/", import.meta.url)),
+  profile = await mkdtemp(path.join(os.tmpdir(), "flashban-test-"));
+const base = process.env.BASE_URL || "http://127.0.0.1:8787";
+const checks = [];
+const add = checks.push.bind(checks);
+checks.push = (x) => {
+  console.log("PASS " + x);
+  return add(x);
+};
+const context = await chromium.launchPersistentContext(profile, {
+  headless: true,
+  channel: "chromium",
+  viewport: { width: 1440, height: 1080 },
+  args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
+});
+try {
+  let worker =
+    context.serviceWorkers()[0] ||
+    (await context.waitForEvent("serviceworker"));
+  const id = new URL(worker.url()).host;
+  await worker.evaluate(() => chrome.storage.local.set({ events: [] }));
+  const page = await context.newPage();
+  await page.goto(base + "/fixtures/source.html");
+  await page.waitForSelector('[data-flashban-overlay][data-state="guard"]');
+  checks.push("installed extension creates an opaque source guard");
+  await page.locator("#start").click();
+  await page.waitForSelector('[data-flashban-overlay][data-state="blocked"]', {
+    timeout: 7000,
+  });
+  checks.push("real canvas samples trigger a blocked overlay");
+  await page.screenshot({
+    path: new URL("../artifacts/extension-shield.png", import.meta.url)
+      .pathname,
+  });
+  await page.waitForTimeout(300);
+  let events = await worker.evaluate(
+    async () => (await chrome.storage.local.get("events")).events || [],
+  );
+  assert.ok(
+    events.some(
+      (e) =>
+        e.kind === "blocked" &&
+        e.source === "canvas" &&
+        e.host === "127.0.0.1" &&
+        e.fps >= 3,
+    ),
+  );
+  assert.ok(
+    events.every((e) => !Object.hasOwn(e, "url") && !Object.hasOwn(e, "path")),
+  );
+  checks.push("background stores actual host-only measurements");
+  await page.evaluate(async (base) => {
+    const image = new Image();
+    image.src = base.replace(":8787", ":8788") + "/tainted.svg";
+    await image.decode();
+    for (const name of ["tainted", "healthy"]) {
+      const c = document.createElement("canvas");
+      c.width = 400;
+      c.height = 200;
+      c.id = name;
+      c.style.cssText = `position:fixed;left:${name === "tainted" ? 0 : 500}px;top:600px;width:400px;height:200px`;
+      document.body.append(c);
+      const x = c.getContext("2d");
+      x.fillStyle = "#234f55";
+      x.fillRect(0, 0, 400, 200);
+      if (name === "tainted") x.drawImage(image, 0, 0, 400, 200);
+    }
+  }, base);
+  await page.waitForSelector(
+    '[data-flashban-overlay][data-state="unreadable"]',
+  );
+  await page.waitForTimeout(1700);
+  assert.equal(
+    await page
+      .locator('[data-flashban-overlay][data-state="unreadable"]')
+      .count(),
+    1,
+  );
+  assert.equal(
+    await page.locator('[data-flashban-overlay][data-state="guard"]').count(),
+    0,
+  );
+  checks.push("tainted canvas is guarded without poisoning a healthy sibling");
+  await page.evaluate(() => {
+    const style = document.createElement("style");
+    style.textContent =
+      "@keyframes sourceFlash{0%,100%{background:#171717}50%{background:#a2a2a2}}#css-source{position:fixed;left:500px;top:100px;width:400px;height:200px;animation:sourceFlash 250ms step-end infinite}";
+    document.head.append(style);
+    const el = document.createElement("div");
+    el.id = "css-source";
+    document.body.append(el);
+  });
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector("#css-source")
+        .getAnimations()
+        .some((a) => a.playState === "paused"),
+    null,
+    { timeout: 7000 },
+  );
+  checks.push("CSS background sampling detects and pauses rapid animation");
+  await page.evaluate(async () => {
+    const c = document.createElement("canvas");
+    c.width = 400;
+    c.height = 200;
+    const x = c.getContext("2d");
+    x.fillStyle = "#171717";
+    x.fillRect(0, 0, 400, 200);
+    const stream = c.captureStream(30),
+      rec = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8" }),
+      chunks = [];
+    rec.ondataavailable = (e) => chunks.push(e.data);
+    const done = new Promise((resolve) => (rec.onstop = resolve));
+    let high = false;
+    rec.start();
+    const timer = setInterval(() => {
+      high = !high;
+      x.fillStyle = high ? "#a2a2a2" : "#171717";
+      x.fillRect(0, 0, 400, 200);
+    }, 125);
+    await new Promise((r) => setTimeout(r, 2000));
+    clearInterval(timer);
+    rec.stop();
+    await done;
+    stream.getTracks().forEach((t) => t.stop());
+    const v = document.createElement("video");
+    v.id = "video-source";
+    v.muted = true;
+    v.loop = true;
+    v.style.cssText =
+      "position:fixed;left:0;top:100px;width:400px;height:200px";
+    v.src = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
+    document.body.append(v);
+    await v.play();
+  });
+  await page.waitForFunction(
+    () => document.querySelector("#video-source").paused,
+    null,
+    { timeout: 7000 },
+  );
+  await page.waitForTimeout(300);
+  events = await worker.evaluate(
+    async () => (await chrome.storage.local.get("events")).events || [],
+  );
+  assert.ok(events.some((e) => e.kind === "blocked" && e.source === "video"));
+  checks.push("actual video frame sampling detects and pauses generated media");
+  const popup = await context.newPage();
+  await popup.goto(`chrome-extension://${id}/popup/popup.html`);
+  await popup.waitForSelector("#events li");
+  await popup.screenshot({
+    path: new URL("../artifacts/extension-popup.png", import.meta.url).pathname,
+  });
+  await popup.locator("#clear").click();
+  await popup.waitForFunction(
+    () => document.querySelector("#status").textContent === "Events cleared.",
+  );
+  assert.deepEqual(
+    await worker.evaluate(
+      async () => (await chrome.storage.local.get("events")).events,
+    ),
+    [],
+  );
+  checks.push("popup renders and clears the local log");
+  await writeFile(
+    new URL("../artifacts/extension-results.json", import.meta.url),
+    JSON.stringify({ checkedAt: new Date().toISOString(), checks }, null, 2),
+  );
+  console.log("Extension checks passed.");
+} finally {
+  await context.close();
+  await rm(profile, { recursive: true, force: true });
+}

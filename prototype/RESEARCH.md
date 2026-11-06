@@ -2,14 +2,14 @@
 
 Reviewed November 6, 2026. Primary specifications and browser documentation are the source of truth; community workarounds do not establish accessibility conformance.
 
-| Decision | Evidence | Consequence |
-| --- | --- | --- |
-| Count paired opposing luminance transitions in a real-time window | [W3C general-flash definition](https://www.w3.org/TR/WCAG22/#dfn-general-flash-and-red-flash-thresholds) | A transition is not a complete flash. Tests distinguish three from four completed flashes per second. |
-| Use isolated MV3 content scripts, with bundled local code | [Chrome content scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts) | No remote code, page-global bridge, or unsafe evaluation. |
-| Use frame callbacks for readable video | [MDN requestVideoFrameCallback](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback) | Sampling follows browser frames rather than a low-frequency timer. Scheduling can still miss transitions. |
-| Guard unreadable content | [MDN cross-origin canvas](https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/CORS_enabled_image) | Cross-origin pixel restrictions are real. The studio demonstrates a separate local origin without CORS. |
-| Keep events local and bounded | Browser storage and attack-surface minimization | No reputation server, accounts, telemetry uploads or personal browsing paths. |
-| Default to covered examples and offer a measurements-only replay | [W3C SC 2.3.1](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html) | Demonstration does not require exposing viewers to flashing stimuli; reduced motion has a useful fallback. |
+| Decision                                                          | Evidence                                                                                                                     | Consequence                                                                                                |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Count paired opposing luminance transitions in a real-time window | [W3C general-flash definition](https://www.w3.org/TR/WCAG22/#dfn-general-flash-and-red-flash-thresholds)                     | A transition is not a complete flash. Tests distinguish three from four completed flashes per second.      |
+| Use isolated MV3 content scripts, with bundled local code         | [Chrome content scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts)                      | No remote code, page-global bridge, or unsafe evaluation.                                                  |
+| Use frame callbacks for readable video                            | [MDN requestVideoFrameCallback](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback) | Sampling follows browser frames rather than a low-frequency timer. Scheduling can still miss transitions.  |
+| Guard unreadable content                                          | [MDN cross-origin canvas](https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/CORS_enabled_image)                       | Cross-origin pixel restrictions are real. The studio demonstrates a separate local origin without CORS.    |
+| Keep events local and bounded                                     | Browser storage and attack-surface minimization                                                                              | No reputation server, accounts, telemetry uploads or personal browsing paths.                              |
+| Default to covered examples and offer a measurements-only replay  | [W3C SC 2.3.1](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html)                            | Demonstration does not require exposing viewers to flashing stimuli; reduced motion has a useful fallback. |
 
 ## Deliberate scope cuts
 

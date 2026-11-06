@@ -29,7 +29,8 @@ for (let i = 0; i < 256; i++) {
   LINEAR[i] = c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 }
 
-const channel = (v) => LINEAR[Math.min(255, Math.max(0, Math.round(Number(v) || 0)))];
+const channel = (v) =>
+  LINEAR[Math.min(255, Math.max(0, Math.round(Number(v) || 0)))];
 
 function relativeLuminance(r, g, b) {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
@@ -37,13 +38,26 @@ function relativeLuminance(r, g, b) {
 
 const isInt = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
 
-function createDetector({ width = 32, height = 18, preset = 'strict', minAreaPx = 21800 } = {}) {
-  if (!isInt(width, 1, MAX_SIDE) || !isInt(height, 1, MAX_SIDE) || width * height > MAX_PIXELS) {
-    throw new RangeError('invalid dimensions');
+function createDetector({
+  width = 32,
+  height = 18,
+  preset = "strict",
+  minAreaPx = 21800,
+} = {}) {
+  if (
+    !isInt(width, 1, MAX_SIDE) ||
+    !isInt(height, 1, MAX_SIDE) ||
+    width * height > MAX_PIXELS
+  ) {
+    throw new RangeError("invalid dimensions");
   }
-  if (typeof preset !== 'string' || !Object.hasOwn(LIMITS, preset)) throw new RangeError('invalid preset');
-  if (typeof minAreaPx !== 'number' || !(minAreaPx >= 0 && minAreaPx <= MAX_AREA)) {
-    throw new RangeError('invalid minAreaPx');
+  if (typeof preset !== "string" || !Object.hasOwn(LIMITS, preset))
+    throw new RangeError("invalid preset");
+  if (
+    typeof minAreaPx !== "number" ||
+    !(minAreaPx >= 0 && minAreaPx <= MAX_AREA)
+  ) {
+    throw new RangeError("invalid minAreaPx");
   }
 
   const n = width * height;
@@ -68,8 +82,14 @@ function createDetector({ width = 32, height = 18, preset = 'strict', minAreaPx 
   reset();
 
   const unreadable = (error) => ({
-    flashesPerSecond: null, areaPct: null, areaPx: null,
-    violation: true, severity: 'block', reason: 'unreadable', error, samples,
+    flashesPerSecond: null,
+    areaPct: null,
+    areaPx: null,
+    violation: true,
+    severity: "block",
+    reason: "unreadable",
+    error,
+    samples,
   });
 
   // Returns true when this sample completes a flash (second of a transition pair).
@@ -92,11 +112,15 @@ function createDetector({ width = 32, height = 18, preset = 'strict', minAreaPx 
 
   function push(frame) {
     try {
-      if (frame === null || typeof frame !== 'object') return unreadable('frame');
+      if (frame === null || typeof frame !== "object")
+        return unreadable("frame");
       const { t, pixels, areaPx } = frame;
-      if (typeof t !== 'number' || !Number.isFinite(t) || t < lastT) return unreadable('timestamp');
-      if (!(pixels instanceof Uint8ClampedArray) || pixels.length !== n * 4) return unreadable('pixels');
-      if (typeof areaPx !== 'number' || !(areaPx >= 0 && areaPx <= MAX_AREA)) return unreadable('area');
+      if (typeof t !== "number" || !Number.isFinite(t) || t < lastT)
+        return unreadable("timestamp");
+      if (!(pixels instanceof Uint8ClampedArray) || pixels.length !== n * 4)
+        return unreadable("pixels");
+      if (typeof areaPx !== "number" || !(areaPx >= 0 && areaPx <= MAX_AREA))
+        return unreadable("area");
 
       const first = samples === 0;
       lastT = t;
@@ -105,7 +129,10 @@ function createDetector({ width = 32, height = 18, preset = 'strict', minAreaPx 
       let over = 0;
       let peak = 0;
       for (let p = 0, i = 0; p < n; p++, i += 4) {
-        const L = 0.2126 * LINEAR[pixels[i]] + 0.7152 * LINEAR[pixels[i + 1]] + 0.0722 * LINEAR[pixels[i + 2]];
+        const L =
+          0.2126 * LINEAR[pixels[i]] +
+          0.7152 * LINEAR[pixels[i + 1]] +
+          0.0722 * LINEAR[pixels[i + 2]];
         const base = p * RING;
         if (first) {
           lo[p] = L;
@@ -127,12 +154,12 @@ function createDetector({ width = 32, height = 18, preset = 'strict', minAreaPx 
         areaPct: Math.round((over / n) * 10000) / 100,
         areaPx: Math.round(flashPx),
         violation,
-        severity: violation ? 'block' : over > 0 ? 'warn' : 'none',
-        reason: violation ? 'flashing' : over > 0 ? 'small-area' : 'clear',
+        severity: violation ? "block" : over > 0 ? "warn" : "none",
+        reason: violation ? "flashing" : over > 0 ? "small-area" : "clear",
         samples,
       };
     } catch {
-      return unreadable('internal');
+      return unreadable("internal");
     }
   }
 

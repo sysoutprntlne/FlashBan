@@ -52,3 +52,5 @@ Regenerate the video on macOS with `npm run video` while the demo server runs; r
 **Experimental. Not a medical device, guarantee of protection, or WCAG certification.** General-luminance flashes only; no saturated-red detector or animated-image decoder. CSS sampling is approximate. Browser scheduling and initial rendering can expose content before intervention. Area is a CSS-pixel heuristic, not calibrated visual angle. Cross-origin/DRM restrictions, small or adversarial elements, compositing, screenshots and viewport aggregation need more work. No universal browser/site support claim.
 
 Research and the reasons for these choices are in [RESEARCH.md](RESEARCH.md).
+
+The delivered local session is managed by the macOS user job `com.flashban.prototype`; stop that session with `launchctl remove com.flashban.prototype`. A normal `npm start` remains the portable way to run the studio.

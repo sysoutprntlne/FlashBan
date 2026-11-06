@@ -32,7 +32,7 @@ Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and
 
 ## Validation
 
-**45 unit tests**, **9 studio browser checks**, and **7 installed-extension checks** pass locally. Studio checks include an automated accessibility scan and a mobile viewport. Extension checks exercise actual canvas/CSS/video detection, unreadable-source recovery, local logging and clearing. Browser evidence is saved in `prototype/artifacts`. The fork workflow reruns build, unit tests and browser tests.
+**46 unit tests**, **9 studio browser checks**, and **7 installed-extension checks** pass locally. Studio checks include an automated accessibility scan and a mobile viewport. Extension checks exercise actual canvas/CSS/video detection, unreadable-source recovery, local logging and clearing. Browser evidence is saved in `prototype/artifacts`. The fork workflow reruns build, unit tests and browser tests.
 
 ```sh
 cd prototype

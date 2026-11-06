@@ -5,7 +5,10 @@
   "description": "Prototype: covers video, canvas and CSS-animated elements that flash quickly. Not a medical device.",
   "permissions": ["storage"],
   "background": { "service_worker": "background.js" },
-  "action": { "default_title": "Seizure Shield", "default_popup": "popup/popup.html" },
+  "action": {
+    "default_title": "Seizure Shield",
+    "default_popup": "popup/popup.html"
+  },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],

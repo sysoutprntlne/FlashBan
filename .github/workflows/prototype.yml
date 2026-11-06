@@ -2,9 +2,9 @@ name: Fork prototype
 on:
   push:
     branches: [prototype/local-shield]
-    paths: ['prototype/**', 'demo/**', '.github/workflows/prototype.yml']
+    paths: ["prototype/**", "demo/**", ".github/workflows/prototype.yml"]
   pull_request:
-    paths: ['prototype/**', 'demo/**', '.github/workflows/prototype.yml']
+    paths: ["prototype/**", "demo/**", ".github/workflows/prototype.yml"]
 permissions:
   contents: read
 jobs:
