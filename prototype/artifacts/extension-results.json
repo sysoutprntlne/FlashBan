@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-06T19:58:30.244Z",
+  "checks": [
+    "installed extension creates an opaque source guard",
+    "real canvas samples trigger a blocked overlay",
+    "background stores actual host-only measurements",
+    "tainted canvas is guarded without poisoning a healthy sibling",
+    "CSS background sampling detects and pauses rapid animation",
+    "actual video frame sampling detects and pauses generated media",
+    "popup renders and clears the local log"
+  ]
+}

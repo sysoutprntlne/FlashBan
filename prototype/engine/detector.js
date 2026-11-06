@@ -1,0 +1,137 @@
+// Pure general-flash detector. No DOM and no chrome.* calls: runs under Node tests
+// and is bundled into the extension by build.mjs (which wraps the exports).
+//
+// Model: each sample pixel's sRGB relative luminance is tracked for extrema. A
+// transition is a move of >= 0.1 away from the running extreme where the darker
+// side is < 0.8. Two consecutive opposing transitions complete one flash. A pixel
+// "exceeds" when more than LIMITS[preset] flashes completed in the last 1000 ms.
+// The scene violates when exceeding pixels cover >= minAreaPx of the element.
+// This is a heuristic screen, not a WCAG conformance certification.
+
+const LIMITS = Object.freeze({ strict: 2, standard: 3 });
+const WINDOW_MS = 1000;
+const MIN_DELTA = 0.1;
+const DARK_LIMIT = 0.8;
+const EPS = 1e-6;
+const MAX_SIDE = 256;
+const MAX_PIXELS = 4096;
+const RING = 8; // completions remembered per pixel: bounds memory and the reported rate
+const MAX_AREA = 1e9;
+
+export const MAX_REPORTED_RATE = RING;
+
+const LINEAR = new Float64Array(256);
+for (let i = 0; i < 256; i++) {
+  const c = i / 255;
+  LINEAR[i] = c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+const channel = (v) => LINEAR[Math.min(255, Math.max(0, Math.round(Number(v) || 0)))];
+
+export function relativeLuminance(r, g, b) {
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+const isInt = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+
+export function createDetector({ width = 32, height = 18, preset = 'strict', minAreaPx = 21800 } = {}) {
+  if (!isInt(width, 1, MAX_SIDE) || !isInt(height, 1, MAX_SIDE) || width * height > MAX_PIXELS) {
+    throw new RangeError('invalid dimensions');
+  }
+  if (typeof preset !== 'string' || !Object.hasOwn(LIMITS, preset)) throw new RangeError('invalid preset');
+  if (typeof minAreaPx !== 'number' || !(minAreaPx >= 0 && minAreaPx <= MAX_AREA)) {
+    throw new RangeError('invalid minAreaPx');
+  }
+
+  const n = width * height;
+  const limit = LIMITS[preset];
+  const lo = new Float64Array(n);
+  const hi = new Float64Array(n);
+  const dir = new Int8Array(n); // 0 none yet, 1 last transition rising, -1 falling
+  const parity = new Uint8Array(n);
+  const head = new Uint8Array(n);
+  const done = new Float64Array(n * RING); // flash completion timestamps (ring per pixel)
+  let lastT = -Infinity;
+  let samples = 0;
+
+  function reset() {
+    dir.fill(0);
+    parity.fill(0);
+    head.fill(0);
+    done.fill(-Infinity);
+    lastT = -Infinity;
+    samples = 0;
+  }
+  reset();
+
+  const unreadable = (error) => ({
+    flashesPerSecond: null, areaPct: null, areaPx: null,
+    violation: true, severity: 'block', reason: 'unreadable', error, samples,
+  });
+
+  // Returns true when this sample completes a flash (second of a transition pair).
+  function track(p, L) {
+    const d = dir[p];
+    if (d !== -1 && L > hi[p]) hi[p] = L;
+    if (d !== 1 && L < lo[p]) lo[p] = L;
+    if (d !== 1 && L - lo[p] >= MIN_DELTA - EPS && lo[p] < DARK_LIMIT) {
+      dir[p] = 1;
+      hi[p] = L;
+    } else if (d !== -1 && hi[p] - L >= MIN_DELTA - EPS && L < DARK_LIMIT) {
+      dir[p] = -1;
+      lo[p] = L;
+    } else {
+      return false;
+    }
+    parity[p] ^= 1;
+    return parity[p] === 0;
+  }
+
+  function push(frame) {
+    try {
+      if (frame === null || typeof frame !== 'object') return unreadable('frame');
+      const { t, pixels, areaPx } = frame;
+      if (typeof t !== 'number' || !Number.isFinite(t) || t < lastT) return unreadable('timestamp');
+      if (!(pixels instanceof Uint8ClampedArray) || pixels.length !== n * 4) return unreadable('pixels');
+      if (typeof areaPx !== 'number' || !(areaPx >= 0 && areaPx <= MAX_AREA)) return unreadable('area');
+
+      const first = samples === 0;
+      lastT = t;
+      if (samples < 1e9) samples++;
+      const cutoff = t - WINDOW_MS + EPS;
+      let over = 0;
+      let peak = 0;
+      for (let p = 0, i = 0; p < n; p++, i += 4) {
+        const L = 0.2126 * LINEAR[pixels[i]] + 0.7152 * LINEAR[pixels[i + 1]] + 0.0722 * LINEAR[pixels[i + 2]];
+        const base = p * RING;
+        if (first) {
+          lo[p] = L;
+          hi[p] = L;
+        } else if (track(p, L)) {
+          done[base + head[p]] = t;
+          head[p] = (head[p] + 1) % RING;
+        }
+        let count = 0;
+        for (let k = 0; k < RING; k++) if (done[base + k] > cutoff) count++;
+        if (count > peak) peak = count;
+        if (count > limit) over++;
+      }
+
+      const flashPx = (over / n) * areaPx;
+      const violation = over > 0 && flashPx >= minAreaPx;
+      return {
+        flashesPerSecond: peak,
+        areaPct: Math.round((over / n) * 10000) / 100,
+        areaPx: Math.round(flashPx),
+        violation,
+        severity: violation ? 'block' : over > 0 ? 'warn' : 'none',
+        reason: violation ? 'flashing' : over > 0 ? 'small-area' : 'clear',
+        samples,
+      };
+    } catch {
+      return unreadable('internal');
+    }
+  }
+
+  return Object.freeze({ push, reset, width, height, preset, minAreaPx });
+}

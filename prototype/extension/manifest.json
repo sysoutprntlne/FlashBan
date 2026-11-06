@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Photosensitive Seizure Shield (prototype)",
+  "version": "0.1.0",
+  "description": "Prototype: covers video, canvas and CSS-animated elements that flash quickly. Not a medical device.",
+  "permissions": ["storage"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Seizure Shield", "default_popup": "popup/popup.html" },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content-bundle.js", "src/content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "ISOLATED"
+    }
+  ]
+}

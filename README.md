@@ -1,25 +1,49 @@
-# FlashBan: Photosensitive Seizure Shield
+# FlashBan — a calmer web
 
-A browser extension that finds flashing content on web pages (the WCAG 2.3.1 "three flashes per second" rule) and dims, freezes, or blocks it with an accessible safe-mode overlay, so it doesn't reach the viewer. It also treats deliberate strobing ("epilepsy trolling") as a security threat and logs the domains that serve it.
+A fork-only engineering prototype that measures general luminance flashes, guards unreadable media, and puts a static shield between the viewer and flagged content.
 
-Built by team FlashBan at Hackcessability (Technology & Interface track, BUCyS cybersecurity subtrack).
+![FlashBan demo studio](prototype/artifacts/studio-desktop.png)
 
-> **Not a medical device.** Seizure Shield reduces exposure to flashing content. It cannot guarantee protection, and some media (DRM or cross-origin streams) can't be analyzed. Content it can't check is dimmed by default.
+## Try the working demo
 
-## How it works
+```sh
+cd prototype
+npm ci
+npx playwright install chromium
+npm run build
+npm start
+```
 
-- **Detects** flashing on `<video>`, `<canvas>`, animated GIF/WebP/APNG, and CSS/JS animations, using WCAG relative luminance, general-flash and red-flash rules in a sliding one-second window.
-- **Shields** violating content right away: pauses it, covers it with a static overlay that works by keyboard and screen reader, and lets you show it again on purpose.
-- **Guards** new media with a short dimmed warm-up while it's checked, and fails closed when it can't be checked.
-- **Logs** offending domains locally and, if you opt in, reports them to a reputation list that's protected against poisoning.
+Open **http://127.0.0.1:8787**. Choose calm, rapid-change or unreadable media. Live measurements come from real pixels; the unreadable scene triggers an actual cross-origin canvas restriction. Rapid sources stay covered during analysis and stop when flagged. A measurements-only replay is available for reduced motion.
 
-Details: [project plan](docs/PROJECT_PLAN.md), [contracts](docs/CONTRACTS.md), [threat model](security/THREAT_MODEL.md).
+The runtime is dependency-free and local. Two loopback ports (8787 and 8788) support the studio and its cross-origin fixture. No account, upload, analytics or reporting service.
 
-## Install (unpacked)
+## Install the Chrome extension
 
-1. Clone this repo.
-2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, choose the `extension/` folder.
+Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `prototype/extension`. Then use the studio’s installation page and standalone extension fixture. The extension shares the studio’s detector, covers new sources while sampling, pauses flagged video/CSS, and maintains a bounded local hostname-only event log.
 
-## Team workflow: the agent board
+## Watch or download
 
-Our coding agents coordinate on a pinned GitHub issue (#1). Each agent posts when it finishes or needs something, tags teammates by GitHub login, and waits for its own tag. Rules for agents are in [AGENTS.md](AGENTS.md). Board commands: `tools/board post | unread | wait | read -n 20 | whoami` (needs `gh auth login`). Based on [azizu06/hackathon-agent-board](https://github.com/azizu06/hackathon-agent-board).
+- [Narrated and captioned walkthrough](prototype/artifacts/flashban-walkthrough.mp4)
+- [Captions](prototype/artifacts/flashban-walkthrough.vtt) · [Transcript](prototype/artifacts/transcript.md)
+- [Complete prototype ZIP](prototype/artifacts/flashban-prototype.zip)
+- [Setup, architecture and limitations](prototype/README.md)
+- [Research and design decisions](prototype/RESEARCH.md)
+
+## Validation
+
+**45 unit tests**, **9 studio browser checks**, and **7 installed-extension checks** pass locally. Studio checks include an automated accessibility scan and a mobile viewport. Extension checks exercise actual canvas/CSS/video detection, unreadable-source recovery, local logging and clearing. Browser evidence is saved in `prototype/artifacts`. The fork workflow reruns build, unit tests and browser tests.
+
+```sh
+cd prototype
+npm test
+# with npm start running:
+npm run test:browser
+node test/extension.mjs
+```
+
+## Honest boundaries
+
+Experimental, not a medical device, guaranteed protection, or WCAG certification. General flashes only; saturated-red flashes and animated-image decoding are not implemented. CSS sampling and source-area measurements are approximations. Browser scheduling, initial rendering, compositing, small regions, and adversarial pages can defeat detection or covering. Passing controlled examples does not establish safety on arbitrary websites. See the prototype README for the full limits.
+
+This branch is independent work in `sysoutprntlne/FlashBan`; upstream main and the team PR are untouched. The original hackathon plan and demo fixtures remain in `docs/` and `demo/` for context.
